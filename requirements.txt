@@ -1,0 +1,8 @@
+paho-mqtt
+discord.py
+docker
+python-dateutil
+pytz
+redis
+requests
+beautifulsoup4
