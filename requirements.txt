@@ -5,4 +5,5 @@ python-dateutil
 pytz
 redis
 requests
+lxml
 beautifulsoup4

@@ -25,7 +25,8 @@ logging.getLogger("").addHandler(console)
 
 logger = logging.getLogger(__name__)
 
-INTERVAL_STATUS = timedelta(seconds=5)
+INTERVAL_NOGAME = timedelta(seconds=15)
+INTERVAL_GAME = timedelta(seconds=1)
 
 
 class UT99Client(commands.Bot):
@@ -47,7 +48,11 @@ class UT99Client(commands.Bot):
         self.bg_task = self.loop.create_task(self.my_background_task())
 
         self.current_game = dict()
-        self.last_check = datetime.utcnow() - INTERVAL_STATUS
+        self.current_rules = dict()
+        self.interval = INTERVAL_NOGAME
+        self.announce_next = False
+
+        self.last_check = datetime.utcnow() - INTERVAL_GAME
         self.add_commands()
 
     async def on_ready(self):
@@ -99,43 +104,65 @@ class UT99Client(commands.Bot):
 
     async def ensure_status(self, force=False):
         checktime = datetime.utcnow()
+        fetch_rules = False
         if (
             "mapname" not in self.current_game
             or force
-            or checktime - INTERVAL_STATUS > self.last_check
+            or checktime - self.interval > self.last_check
         ):
             try:
                 status = self.wa.get_state()
             except Exception as details:
                 logger.exception("Server down?", exc_info=details)
-                self.game = discord.Game("UT99 server down?")
+                self.game = discord.Game("UT99 changing maps")
                 self.game_status_change = True
                 return
 
+            if len(self.current_rules) == 0:
+                self.current_rules = self.wa.get_rules()
+
+            game_ended_kills = False
             logger.info(status)
             delta = self.__new_state(status)
+
             if len(delta) > 0:
                 self.current_game.update(status)
                 logger.info(f"wa> fetched mapname {status['mapname']}")
                 self.game = discord.Game(f"UT99 on {status['mapname']}")
                 self.game_status_change = True
                 self.last_check = checktime
-
                 # also see if we have anything actionable
+                if "mapname" in delta and len(status["players"]) > 0:
+                    self.announce_next = True
+
                 if "prev_blank" not in delta:
                     for pl in delta.get("players_new", set()):
-                        self.msgs.append(f"{pl} joined the game!")
+                        if "(Spectator)" not in pl:
+                            self.msgs.append(f"{pl} joined the game!")
+                        if len(self.current_game["players"]) == 1:
+                            self.announce_next = True
+                            fetch_rules = True
                     for pl in delta.get("players_left", set()):
-                        self.msgs.append(f"{pl} left the game!")
-                    if "mapname" in delta and len(status["players"]) > 0:
-                        self.msgs.append(
-                            f"New game starting on {status['mapname']}, "
-                            f"{len(status['players'])} in game"
-                        )
+                        if "(Spectator)" not in pl:
+                            self.msgs.append(f"{pl} left the game!")
+
                     if "mode" in delta:
                         self.msgs.append(f"Game mode is {delta['mode'][1]}")
-                if "gameover" in delta:
-                    self.msgs.append("Game ended on time limit hit!")
+                        fetch_rules = True
+                    if "players" in delta:  # scores changed
+                        fraglimit = self.current_rules.get("Frag Limit", 15)
+                        for _, sc in delta["players"].items():
+                            if int(sc[1]) >= fraglimit:
+                                game_ended_kills = True
+                else:
+                    fetch_rules = True
+
+                if "gameover" in delta or game_ended_kills:
+                    if not game_ended_kills:
+                        self.msgs.append("Game ended on time limit hit!")
+                    else:
+                        self.msgs.append("Game ended on frag limit hit!")
+
                     for cli in sorted(
                         self.current_game["players"].values(),
                         key=lambda x: x["score"],
@@ -145,6 +172,25 @@ class UT99Client(commands.Bot):
                             f"> {cli.get('name', '<unknown>')}: "
                             f"{cli.get('score', '0?')} kills"
                         )
+
+        if self.announce_next:
+            self.msgs.append(
+                f"New game starting on {self.current_game['mapname']}, "
+                f"{len(self.current_game['players'])} in game"
+            )
+            fetch_rules = True
+            self.announce_next = False
+
+
+        if fetch_rules:
+            self.current_rules = self.wa.get_rules()
+
+
+
+        if len(self.current_game.get("players", [])) > 0:
+            self.interval = INTERVAL_GAME
+        else:
+            self.interval = INTERVAL_NOGAME
 
         if self.game_status_change:
             await self.change_presence(status=discord.Status.online, activity=self.game)
@@ -176,6 +222,45 @@ class UT99Client(commands.Bot):
                        unknown text will be taken as 'all'
             """
             await ctx.channel.send("Stats not implemented")
+
+        @self.command(name="numplayers", pass_context=True)
+        async def numplayers(ctx, num: str = ""):
+            """ Get/set minimum number of players (including bots) 
+            
+            Args:
+                num: Number of players, must be > 1 - or blank to get current setting
+            """
+            if num != "":
+                try:
+                    num_ = int(num)
+                    self.wa.set_min_players(num_)
+                except ValueError:
+                    await ctx.channel.send(f"ERROR! {num} is not a number")
+
+            await ctx.channel.send(f"Currently set to minimum {self.wa.get_min_players()} players")
+                
+        @self.command(name="instagib", pass_context=True)
+        async def instagib(ctx, onoff: str = "1"):
+            """ Turn instagib on/off
+
+            Args:
+                onoff: 1 for on, 0 for off
+            """
+
+            if onoff == "0":
+                self.wa.del_mutator("InstaGib")
+                await ctx.channel.send("InstaGib OFF! Use ?restart to reload level")
+            else:
+                self.wa.add_mutator("InstaGib")
+                await ctx.channel.send("InstaGib ON! Use ?restart to reload level")
+
+        @self.command(name="restart", pass_context=True)
+        async def restart(ctx):
+            """ Restart level """
+            self.wa.restart()
+            await ctx.channel.send("Restarted level, please wait a few seconds")
+            self.announce_next = True
+            await self.ensure_status(True)
 
     async def my_background_task(self):
         await self.wait_until_ready()
