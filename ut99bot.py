@@ -267,6 +267,7 @@ class UT99Client(commands.Bot):
             """ Restart level """
             self.wa.switch_map(newmap)
             await ctx.channel.send("Changing map, please wait a few seconds")
+            await sleep(5.0)  # Give it a few seconds
             self.announce_next = True
             await self.ensure_status(True)
         
