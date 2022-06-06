@@ -124,5 +124,16 @@ class UT99WebAdmin(object):
         delmut = {'DelMutator': '<', 'IncludeMutatorsSelect': mut}
         self.__post_url("current_mutators", delmut)
 
+    def switch_map(self, mapname):
+        # Add a few assumptions here
+        if not mapname.endswith(".unr"):
+            mapname = f"{mapname}.unr"
+        
+        if "-" not in mapname:
+            mapname = f"DM-{mapname}"
+
+        postmap = {"MapSelect": mapname, "SwitchMap": "Switch"}
+        self.__post_url("current_game", postmap)
+
     def restart(self):
         self.__get_url("current_restart")

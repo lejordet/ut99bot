@@ -262,6 +262,14 @@ class UT99Client(commands.Bot):
             self.announce_next = True
             await self.ensure_status(True)
 
+        @self.command(name="map", pass_context=True)
+        async def switch_map(ctx, newmap: str):
+            """ Restart level """
+            self.wa.switch_map(newmap)
+            await ctx.channel.send("Changing map, please wait a few seconds")
+            self.announce_next = True
+            await self.ensure_status(True)
+        
     async def my_background_task(self):
         await self.wait_until_ready()
         channel = self.get_channel(int(self.cfg["channel"]))
