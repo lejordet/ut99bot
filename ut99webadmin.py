@@ -39,11 +39,18 @@ class UT99WebAdmin(object):
             self.url + subpath, auth=(self.username, self.password), data=payload
         )
 
+    # a few proxy functions for development
+    def get_url(self, subpath):
+        return self.__get_url(subpath)
+
     def post_url(self, subpath, payload):
         return self.__post_url(subpath, payload)
 
     def __parse(self, subpath):
         return BeautifulSoup(self.__get_url(subpath).text, features="lxml")
+
+    def parse(self, subpath):
+        return self.__parse(subpath)
 
     def get_state(self):
         plpg = self.__parse("current_players")
@@ -123,6 +130,12 @@ class UT99WebAdmin(object):
         mut = MUTATORS.get(mutator, mutator)
         delmut = {'DelMutator': '<', 'IncludeMutatorsSelect': mut}
         self.__post_url("current_mutators", delmut)
+
+    def get_maps(self):
+        res = self.__parse("current_game")
+        mapsel = res("select")[1]
+
+        return [opt["value"].replace(".unr", "") for opt in mapsel("option")]
 
     def switch_map(self, mapname):
         # Add a few assumptions here

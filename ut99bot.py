@@ -264,12 +264,22 @@ class UT99Client(commands.Bot):
 
         @self.command(name="map", pass_context=True)
         async def switch_map(ctx, newmap: str):
-            """ Restart level """
+            """ Switch map
+            
+            Args:
+                newmap: level to switch to, e.g. "DM-Morpheus" """
             self.wa.switch_map(newmap)
             await ctx.channel.send("Changing map, please wait a few seconds")
             await sleep(5.0)  # Give it a few seconds
             self.announce_next = True
             await self.ensure_status(True)
+
+        @self.command(name="maplist", pass_context=True)
+        async def maplist(ctx):
+            """ List available maps in current game mode """
+            maps = self.wa.get_maps()
+            strmaps = "\n".join([f"> {m}" for m in maps])
+            await ctx.channel.send(f"Available maps:\n{strmaps}")
         
     async def my_background_task(self):
         await self.wait_until_ready()
