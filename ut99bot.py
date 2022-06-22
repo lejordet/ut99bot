@@ -181,11 +181,8 @@ class UT99Client(commands.Bot):
             fetch_rules = True
             self.announce_next = False
 
-
         if fetch_rules:
             self.current_rules = self.wa.get_rules()
-
-
 
         if len(self.current_game.get("players", [])) > 0:
             self.interval = INTERVAL_GAME
@@ -225,8 +222,8 @@ class UT99Client(commands.Bot):
 
         @self.command(name="numplayers", pass_context=True)
         async def numplayers(ctx, num: str = ""):
-            """ Get/set minimum number of players (including bots) 
-            
+            """Get/set minimum number of players (including bots)
+
             Args:
                 num: Number of players, must be > 1 - or blank to get current setting
             """
@@ -237,11 +234,13 @@ class UT99Client(commands.Bot):
                 except ValueError:
                     await ctx.channel.send(f"ERROR! {num} is not a number")
 
-            await ctx.channel.send(f"Currently set to minimum {self.wa.get_min_players()} players")
-                
+            await ctx.channel.send(
+                f"Currently set to minimum {self.wa.get_min_players()} players"
+            )
+
         @self.command(name="instagib", pass_context=True)
         async def instagib(ctx, onoff: str = "1"):
-            """ Turn instagib on/off
+            """Turn instagib on/off
 
             Args:
                 onoff: 1 for on, 0 for off
@@ -256,7 +255,7 @@ class UT99Client(commands.Bot):
 
         @self.command(name="fatboy", pass_context=True)
         async def fatboy(ctx, onoff: str = "1"):
-            """ Turn fatboy on/off
+            """Turn fatboy on/off
 
             Args:
                 onoff: 1 for on, 0 for off
@@ -271,7 +270,7 @@ class UT99Client(commands.Bot):
 
         @self.command(name="restart", pass_context=True)
         async def restart(ctx):
-            """ Restart level """
+            """Restart level"""
             self.wa.restart()
             await ctx.channel.send("Restarted level, please wait a few seconds")
             self.announce_next = True
@@ -279,8 +278,8 @@ class UT99Client(commands.Bot):
 
         @self.command(name="map", pass_context=True)
         async def switch_map(ctx, newmap: str):
-            """ Switch map
-            
+            """Switch map
+
             Args:
                 newmap: level to switch to, e.g. "DM-Morpheus" """
             self.wa.switch_map(newmap)
@@ -291,11 +290,11 @@ class UT99Client(commands.Bot):
 
         @self.command(name="maplist", pass_context=True)
         async def maplist(ctx):
-            """ List available maps in current game mode """
+            """List available maps in current game mode"""
             maps = self.wa.get_maps()
             strmaps = "\n".join([f"> {m}" for m in maps])
             await ctx.channel.send(f"Available maps:\n{strmaps}")
-        
+
     async def my_background_task(self):
         await self.wait_until_ready()
         channel = self.get_channel(int(self.cfg["channel"]))

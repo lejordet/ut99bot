@@ -13,6 +13,7 @@ MUTATORS = {
     "FatBoy": "BotPack.FatBoy",
 }
 
+
 def sanitize_wa_text(text):
     return text.replace("\xa0", " ")
 
@@ -124,12 +125,12 @@ class UT99WebAdmin(object):
 
     def add_mutator(self, mutator):
         mut = MUTATORS.get(mutator, mutator)
-        addmut = {'ExcludeMutatorsSelect': mut, 'AddMutator': '>'}
+        addmut = {"ExcludeMutatorsSelect": mut, "AddMutator": ">"}
         self.__post_url("current_mutators", addmut)
-    
+
     def del_mutator(self, mutator):
         mut = MUTATORS.get(mutator, mutator)
-        delmut = {'DelMutator': '<', 'IncludeMutatorsSelect': mut}
+        delmut = {"DelMutator": "<", "IncludeMutatorsSelect": mut}
         self.__post_url("current_mutators", delmut)
 
     def get_maps(self):
@@ -142,7 +143,7 @@ class UT99WebAdmin(object):
         # Add a few assumptions here
         if not mapname.endswith(".unr"):
             mapname = f"{mapname}.unr"
-        
+
         if "-" not in mapname:
             mapname = f"DM-{mapname}"
 
