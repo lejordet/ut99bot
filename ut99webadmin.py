@@ -10,6 +10,7 @@ HEADER_RE = re.compile(r"(.+?)\sin\s(.+?)\s\(\s(\d+:\d+)")
 
 MUTATORS = {
     "InstaGib": "BotPack.InstaGibDM",
+    "FatBoy": "BotPack.FatBoy",
 }
 
 def sanitize_wa_text(text):

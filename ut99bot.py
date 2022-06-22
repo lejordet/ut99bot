@@ -254,6 +254,21 @@ class UT99Client(commands.Bot):
                 self.wa.add_mutator("InstaGib")
                 await ctx.channel.send("InstaGib ON! Use ?restart to reload level")
 
+        @self.command(name="fatboy", pass_context=True)
+        async def fatboy(ctx, onoff: str = "1"):
+            """ Turn fatboy on/off
+
+            Args:
+                onoff: 1 for on, 0 for off
+            """
+
+            if onoff == "0":
+                self.wa.del_mutator("FatBoy")
+                await ctx.channel.send("FatBoy OFF! Use ?restart to reload level")
+            else:
+                self.wa.add_mutator("FatBoy")
+                await ctx.channel.send("FatBoy ON! Use ?restart to reload level")
+
         @self.command(name="restart", pass_context=True)
         async def restart(ctx):
             """ Restart level """
