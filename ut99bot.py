@@ -288,6 +288,18 @@ class UT99Client(commands.Bot):
             self.announce_next = True
             await self.ensure_status(True)
 
+        @self.command(name="newgame", pass_context=True)
+        async def new_game(ctx):
+            """Set up an instagib game on morpheus, and restart  """
+            self.wa.add_mutator("InstaGib")
+            self.wa.switch_map("DM-Morpheus")
+
+            await sleep(5.0)  # Give it a few seconds
+            self.wa.restart()
+            self.msgs.append("InstaGib ON! Changed to DM-Morpheus! Restarting level!")
+            self.announce_next = True
+            await self.ensure_status(True)
+        
         @self.command(name="maplist", pass_context=True)
         async def maplist(ctx):
             """List available maps in current game mode"""
