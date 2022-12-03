@@ -290,7 +290,7 @@ class UT99Client(commands.Bot):
 
         @self.command(name="newgame", pass_context=True)
         async def new_game(ctx):
-            """Set up an instagib game on morpheus, and restart  """
+            """Set up an instagib game on morpheus, and restart"""
             self.wa.add_mutator("InstaGib")
             self.wa.switch_map("DM-Morpheus")
 
@@ -299,7 +299,7 @@ class UT99Client(commands.Bot):
             self.msgs.append("InstaGib ON! Changed to DM-Morpheus! Restarting level!")
             self.announce_next = True
             await self.ensure_status(True)
-        
+
         @self.command(name="maplist", pass_context=True)
         async def maplist(ctx):
             """List available maps in current game mode"""
@@ -326,7 +326,7 @@ class UT99Client(commands.Bot):
 
 def parse_config():
     cfg = dict()
-    with open("secrets.ini", "rt") as f:
+    with open("secrets.ini") as f:
         for line in f.readlines():
             k, v = line.strip().split("=")
             cfg[k] = v

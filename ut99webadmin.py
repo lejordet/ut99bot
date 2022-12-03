@@ -25,7 +25,7 @@ def try_eval(val):
         return val
 
 
-class UT99WebAdmin(object):
+class UT99WebAdmin:
     def __init__(self, url, username, password):
         self.url = url
         self.username = username
